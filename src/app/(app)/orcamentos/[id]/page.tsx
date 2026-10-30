@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
-import { Building2, Calculator, Clock3, Download, LayoutGrid, ListChecks, Package, Phone, Target } from "lucide-react";
+import { Building2, Calculator, Clock3, LayoutGrid, ListChecks, Package, Phone, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Tabs,
@@ -22,6 +21,7 @@ import { ClientMiniCard } from "@/components/budgets/client-mini-card";
 import { BudgetForm } from "@/components/budgets/budget-form";
 import { ItemsTab } from "@/components/budgets/items-tab";
 import { OrcamentoTab } from "@/components/budgets/orcamento-tab";
+import { PdfActionsDialog } from "@/components/budgets/pdf-actions-dialog";
 import { ObjetivoTab } from "@/components/budgets/objetivo-tab";
 import { ScopeTab } from "@/components/budgets/scope-tab";
 import {
@@ -154,14 +154,7 @@ export default async function OrcamentoDetailPage({
             {budget.titulo}
           </h1>
           <div className="flex shrink-0 items-center gap-1.5">
-            <Button
-              size="sm"
-              render={<a href={`/orcamentos/${id}/pdf`} target="_blank" rel="noopener noreferrer" />}
-              nativeButton={false}
-            >
-              <Download className="size-4" />
-              <span className="hidden sm:inline">Baixar PDF</span>
-            </Button>
+            <PdfActionsDialog budgetId={id} numero={budget.numero} titulo={budget.titulo} />
             <BudgetActionsMenu deleteAction={deleteWithId} cancelAction={updateStatusWithId} />
           </div>
         </div>

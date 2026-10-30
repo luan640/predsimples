@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/auth"];
+const PUBLIC_PATH_PATTERNS = [/^\/orcamentos\/[^/]+\/pdf$/];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -32,7 +33,8 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isPublicPath = PUBLIC_PATHS.some((p) => path.startsWith(p));
+  const isPublicPath =
+    PUBLIC_PATHS.some((p) => path.startsWith(p)) || PUBLIC_PATH_PATTERNS.some((re) => re.test(path));
   const isOnboardingPath = path.startsWith("/onboarding");
 
   if (!user && !isPublicPath) {

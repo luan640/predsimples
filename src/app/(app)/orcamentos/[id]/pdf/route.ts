@@ -1,39 +1,37 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { createClient } from "@/lib/supabase/server";
-import { requireCompanyId } from "@/lib/queries/company";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ReportDocument } from "@/lib/pdf/report-document";
+import { buildOrcamentoFilename } from "@/lib/format";
 
 export const runtime = "nodejs";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: budgetId } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
-  }
+  const supabase = createAdminClient();
 
-  const companyId = await requireCompanyId(supabase, user.id);
+  const { data: budget } = await supabase
+    .from("budgets")
+    .select(
+      "company_id, titulo, numero, descricao, valor_total, data_previsao_entrega, prazo_qtd, prazo_unidade, clients(nome, contato_nome)",
+    )
+    .eq("id", budgetId)
+    .single();
+
+  if (!budget) {
+    return NextResponse.json({ error: "Orçamento não encontrado." }, { status: 404 });
+  }
 
   const { data: company } = await supabase
     .from("companies")
     .select(
       "nome, cidade, responsavel_tecnico_nome, responsavel_tecnico_cargo, responsavel_tecnico_telefone, relatorio_seguranca_padrao, relatorio_prazo_padrao, relatorio_condicoes_pagamento_padrao, relatorio_consideracoes_finais_padrao, relatorio_validade_padrao",
     )
-    .eq("id", companyId)
+    .eq("id", budget.company_id)
     .single();
 
-  const { data: budget } = await supabase
-    .from("budgets")
-    .select("titulo, numero, descricao, valor_total, data_previsao_entrega, prazo_qtd, prazo_unidade, clients(nome, contato_nome)")
-    .eq("id", budgetId)
-    .single();
-
-  if (!company || !budget) {
+  if (!company) {
     return NextResponse.json({ error: "Orçamento não encontrado." }, { status: 404 });
   }
 
@@ -102,7 +100,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="orcamento-${budgetId}.pdf"`,
+      "Content-Disposition": `inline; filename="${buildOrcamentoFilename(budget.numero, budget.titulo)}"`,
     },
   });
 }

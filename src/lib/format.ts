@@ -18,3 +18,17 @@ export function formatRelativeDateTime(value: string | null | undefined) {
   if (isToday) return `hoje às ${time}`;
   return `em ${new Intl.DateTimeFormat("pt-BR").format(date)} às ${time}`;
 }
+
+export function buildOrcamentoFilename(numero: string | null | undefined, titulo: string) {
+  const slug = titulo
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 40);
+
+  const numeroPart = numero ? `${numero.replace(/\//g, "-")}-` : "";
+
+  return `orcamento-${numeroPart}${slug}.pdf`;
+}
