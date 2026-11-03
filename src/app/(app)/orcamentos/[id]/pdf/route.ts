@@ -6,9 +6,8 @@ import { buildOrcamentoFilename } from "@/lib/format";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: budgetId } = await params;
-  const forceDownload = new URL(request.url).searchParams.get("download") === "1";
 
   const supabase = createAdminClient();
 
@@ -101,7 +100,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `${forceDownload ? "attachment" : "inline"}; filename="${buildOrcamentoFilename(budget.numero, budget.titulo)}"`,
+      "Content-Disposition": `inline; filename="${buildOrcamentoFilename(budget.numero, budget.titulo)}"`,
     },
   });
 }
