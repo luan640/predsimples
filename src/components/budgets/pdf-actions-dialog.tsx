@@ -53,7 +53,7 @@ export function PdfActionsDialog({
             className="justify-start"
             render={
               <a
-                href={`/orcamentos/${budgetId}/pdf`}
+                href={`/orcamentos/${budgetId}/pdf?download=1`}
                 download={buildOrcamentoFilename(numero, titulo)}
                 onClick={() => setOpen(false)}
               />
