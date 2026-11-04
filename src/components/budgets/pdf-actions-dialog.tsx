@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Download, FileText, Link as LinkIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { buildOrcamentoFilename } from "@/lib/format";
+import { useIsMobile } from "@/lib/use-is-mobile";
 
 export function PdfActionsDialog({
   budgetId,
@@ -25,9 +27,17 @@ export function PdfActionsDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [showMateriaisValor, setShowMateriaisValor] = useState(false);
+  const isMobile = useIsMobile();
+
+  function buildPdfUrl() {
+    const url = new URL(`${window.location.origin}/orcamentos/${budgetId}/pdf`);
+    if (showMateriaisValor) url.searchParams.set("valores", "1");
+    return url.toString();
+  }
 
   async function handleCopyLink() {
-    const url = `${window.location.origin}/orcamentos/${budgetId}/pdf`;
+    const url = buildPdfUrl();
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link copiado.");
@@ -40,13 +50,13 @@ export function PdfActionsDialog({
   async function handleDownload() {
     setDownloading(true);
     try {
-      const response = await fetch(`/orcamentos/${budgetId}/pdf`);
+      const response = await fetch(buildPdfUrl());
       if (!response.ok) throw new Error("Falha ao gerar o PDF.");
       const blob = await response.blob();
       const filename = buildOrcamentoFilename(numero, titulo);
       const file = new File([blob], filename, { type: "application/pdf" });
 
-      if (navigator.canShare?.({ files: [file] })) {
+      if (isMobile && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] });
       } else {
         const blobUrl = URL.createObjectURL(blob);
@@ -78,6 +88,14 @@ export function PdfActionsDialog({
           <DialogTitle>Relatório em PDF</DialogTitle>
           <DialogDescription>Baixe o relatório ou copie o link para enviar ao cliente.</DialogDescription>
         </DialogHeader>
+        <label className="flex items-start gap-2 text-sm text-muted-foreground">
+          <Checkbox
+            checked={showMateriaisValor}
+            onCheckedChange={setShowMateriaisValor}
+            className="mt-0.5"
+          />
+          Detalhar custo de material
+        </label>
         <div className="flex flex-col gap-2">
           <Button variant="secondary" className="justify-start" onClick={handleDownload} disabled={downloading}>
             {downloading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}

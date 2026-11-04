@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ReportDocument } from "@/lib/pdf/report-document";
-import { buildOrcamentoFilename } from "@/lib/format";
+import { buildOrcamentoFilename, formatCurrencyBRL } from "@/lib/format";
 
 export const runtime = "nodejs";
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: budgetId } = await params;
+  const showMateriaisValor = new URL(request.url).searchParams.get("valores") === "1";
 
   const supabase = createAdminClient();
 
@@ -81,7 +82,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   ];
   const materiaisLines = (items ?? [])
     .filter((i) => i.tipo === "material")
-    .map((i) => `${i.descricao}${i.unidade ? `; ${i.quantidade} ${i.unidade}` : `; ${i.quantidade}`}`);
+    .map((i) => {
+      const qtdPart = i.unidade ? `; ${i.quantidade} ${i.unidade}` : `; ${i.quantidade}`;
+      const valorPart = showMateriaisValor && i.valor_unitario ? `; ${formatCurrencyBRL(i.valor_unitario)}` : "";
+      return `${i.descricao}${qtdPart}${valorPart}`;
+    });
 
   const client = Array.isArray(budget.clients) ? budget.clients[0] : budget.clients;
 
