@@ -58,6 +58,21 @@ export function isBudgetOverdue(
   return dataPrevisaoEntrega < todayStr;
 }
 
+export const PAYMENT_STATUS = ["aguardando_pagamento", "pago"] as const;
+
+export type PaymentStatus = (typeof PAYMENT_STATUS)[number];
+
+export const PAYMENT_STATUS_CONFIG: Record<PaymentStatus, { label: string; className: string }> = {
+  aguardando_pagamento: {
+    label: "Aguardando pagamento",
+    className: "bg-[color-mix(in_oklch,var(--chart-3),transparent_80%)] text-[color:var(--chart-3)]",
+  },
+  pago: {
+    label: "Pago",
+    className: "bg-[color-mix(in_oklch,var(--chart-2),transparent_85%)] text-[color:var(--chart-2)]",
+  },
+};
+
 export const BUDGET_ITEM_TYPES = [
   { value: "material", label: "Material" },
   { value: "mao_de_obra", label: "Mão de obra" },

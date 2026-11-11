@@ -11,9 +11,15 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { requireCompanyId } from "@/lib/queries/company";
 import { formatRelativeDateTime } from "@/lib/format";
-import { BUDGET_STATUS_CONFIG, isBudgetOverdue, type BudgetStatus } from "@/lib/budget-status";
+import {
+  BUDGET_STATUS_CONFIG,
+  isBudgetOverdue,
+  type BudgetStatus,
+  type PaymentStatus,
+} from "@/lib/budget-status";
 import { SetPageHeader } from "@/components/layout/set-page-header";
 import { BudgetStatusFunnel } from "@/components/budgets/budget-status-funnel";
+import { BudgetPaymentToggle } from "@/components/budgets/budget-payment-toggle";
 import { BudgetStatusHistoryCard } from "@/components/budgets/budget-status-history-card";
 import { BudgetActionsMenu } from "@/components/budgets/budget-actions-menu";
 import { BudgetKpiCards } from "@/components/budgets/budget-kpi-cards";
@@ -28,6 +34,7 @@ import {
   updateBudgetAction,
   updateBudgetObjetivoAction,
   updateBudgetStatusAction,
+  updateBudgetPaymentStatusAction,
   deleteBudgetAction,
 } from "@/lib/actions/budgets";
 import { createBudgetItemAction, deleteBudgetItemAction } from "@/lib/actions/budget-items";
@@ -128,6 +135,7 @@ export default async function OrcamentoDetailPage({
   const updateWithId = updateBudgetAction.bind(null, id);
   const updateObjetivoWithId = updateBudgetObjetivoAction.bind(null, id);
   const updateStatusWithId = updateBudgetStatusAction.bind(null, id);
+  const updatePaymentStatusWithId = updateBudgetPaymentStatusAction.bind(null, id);
   const deleteWithId = deleteBudgetAction.bind(null, id);
   const createItemWithId = createBudgetItemAction.bind(null, id);
   const deleteItemWithId = deleteBudgetItemAction.bind(null, id);
@@ -192,6 +200,11 @@ export default async function OrcamentoDetailPage({
             {BUDGET_STATUS_CONFIG[budget.status as BudgetStatus].label}
           </Badge>
         </div>
+
+        <BudgetPaymentToggle
+          status={(budget.status_pagamento as PaymentStatus) ?? "aguardando_pagamento"}
+          action={updatePaymentStatusWithId}
+        />
       </div>
 
       <Card size="sm">

@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireCompanyId } from "@/lib/queries/company";
 import { getNextBudgetNumero } from "@/lib/queries/budgets";
-import { BUDGET_STATUS } from "@/lib/budget-status";
+import { BUDGET_STATUS, PAYMENT_STATUS } from "@/lib/budget-status";
 
 const budgetSchema = z
   .object({
@@ -187,6 +187,32 @@ export async function updateBudgetStatusAction(budgetId: string, formData: FormD
   revalidatePath("/orcamentos");
   revalidatePath(`/orcamentos/${budgetId}`);
   redirect(`/orcamentos/${budgetId}?${tabParam}message=${encodeURIComponent("Status atualizado.")}`);
+}
+
+export async function updateBudgetPaymentStatusAction(budgetId: string, formData: FormData) {
+  const statusPagamento = formData.get("status_pagamento");
+  const tab = formData.get("tab");
+  const tabParam = typeof tab === "string" && tab ? `tab=${encodeURIComponent(tab)}&` : "";
+  const parsed = z.enum(PAYMENT_STATUS).safeParse(statusPagamento);
+
+  if (!parsed.success) {
+    redirect(`/orcamentos/${budgetId}?${tabParam}error=${encodeURIComponent("Status de pagamento inválido.")}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("budgets")
+    .update({ status_pagamento: parsed.data })
+    .eq("id", budgetId);
+
+  if (error) {
+    redirect(`/orcamentos/${budgetId}?${tabParam}error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/orcamentos");
+  revalidatePath("/dashboard");
+  revalidatePath(`/orcamentos/${budgetId}`);
+  redirect(`/orcamentos/${budgetId}?${tabParam}message=${encodeURIComponent("Status de pagamento atualizado.")}`);
 }
 
 export async function deleteBudgetAction(budgetId: string) {

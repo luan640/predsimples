@@ -20,8 +20,10 @@ import { formatCurrencyBRL, formatDate } from "@/lib/format";
 import {
   BUDGET_STATUS,
   BUDGET_STATUS_CONFIG,
+  PAYMENT_STATUS_CONFIG,
   isBudgetOverdue,
   type BudgetStatus,
+  type PaymentStatus,
 } from "@/lib/budget-status";
 import { NewBudgetSheet } from "@/components/budgets/new-budget-sheet";
 import { BudgetFiltersSheet } from "@/components/budgets/budget-filters-sheet";
@@ -53,7 +55,7 @@ export default async function OrcamentosPage({
   let query = supabase
     .from("budgets")
     .select(
-      "id, titulo, numero, numero_pedido, numero_nota, status, valor_total, data_previsao_entrega, clients(nome)",
+      "id, titulo, numero, numero_pedido, numero_nota, status, status_pagamento, valor_total, data_previsao_entrega, clients(nome)",
     )
     .eq("company_id", companyId)
     .order(sortOption.column, { ascending: sortOption.ascending });
@@ -126,6 +128,7 @@ export default async function OrcamentosPage({
               <TableHead>Cliente</TableHead>
               <TableHead>Pedido / Nota</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Pagamento</TableHead>
               <TableHead>Previsão de entrega</TableHead>
               <TableHead className="text-right">Valor</TableHead>
               <TableHead className="w-8" />
@@ -135,6 +138,7 @@ export default async function OrcamentosPage({
             {budgets && budgets.length > 0 ? (
               budgets.map((budget) => {
                 const statusInfo = BUDGET_STATUS_CONFIG[budget.status as BudgetStatus];
+                const paymentStatus = (budget.status_pagamento as PaymentStatus) ?? "aguardando_pagamento";
                 const client = Array.isArray(budget.clients) ? budget.clients[0] : budget.clients;
                 const overdue = isBudgetOverdue(budget.status as BudgetStatus, budget.data_previsao_entrega);
                 return (
@@ -160,6 +164,11 @@ export default async function OrcamentosPage({
                       <Badge className={statusInfo?.className}>{statusInfo?.label ?? budget.status}</Badge>
                     </TableCell>
                     <TableCell>
+                      <Badge className={PAYMENT_STATUS_CONFIG[paymentStatus].className}>
+                        {PAYMENT_STATUS_CONFIG[paymentStatus].label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       <span
                         className={cn(
                           "flex items-center gap-1",
@@ -181,7 +190,7 @@ export default async function OrcamentosPage({
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                   {q || selectedStatuses.length > 0 ? "Nenhum orçamento encontrado." : "Nenhum orçamento cadastrado ainda."}
                 </TableCell>
               </TableRow>
@@ -194,6 +203,7 @@ export default async function OrcamentosPage({
         {budgets && budgets.length > 0 ? (
           budgets.map((budget) => {
             const statusInfo = BUDGET_STATUS_CONFIG[budget.status as BudgetStatus];
+            const paymentStatus = (budget.status_pagamento as PaymentStatus) ?? "aguardando_pagamento";
             const client = Array.isArray(budget.clients) ? budget.clients[0] : budget.clients;
             const overdue = isBudgetOverdue(budget.status as BudgetStatus, budget.data_previsao_entrega);
             return (
@@ -209,8 +219,11 @@ export default async function OrcamentosPage({
                     </span>
                     <span className="font-medium text-foreground">{budget.titulo}</span>
                   </div>
-                  <div className="shrink-0">
+                  <div className="flex shrink-0 flex-col items-end gap-1">
                     <Badge className={statusInfo?.className}>{statusInfo?.label ?? budget.status}</Badge>
+                    <Badge className={PAYMENT_STATUS_CONFIG[paymentStatus].className}>
+                      {PAYMENT_STATUS_CONFIG[paymentStatus].label}
+                    </Badge>
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3 text-sm">
